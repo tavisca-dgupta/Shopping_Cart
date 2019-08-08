@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Xunit;
-using Shopping.com;
+using ShoppingCart;
 
 namespace TestShopping
 {

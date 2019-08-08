@@ -4,16 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shopping.com
+namespace ShoppingCart
 {
     public class MyCart
     {
-        Dictionary<string, int> cartItems = new Dictionary<string, int>();
+        public static Dictionary<string, int> cartItems = new Dictionary<string, int>();
         ProductHandler itemDetails = new ProductHandler();
-        CartDiscount cartDiscount = new CartDiscount();
+        FixedDiscount cartDiscount = new FixedDiscount();
         CategoryDiscount categoryDiscount = new CategoryDiscount();
-        int categoryWiseDiscount = 0;
         int cartValue = 0;
+        string discountType;
+        public MyCart(string discountType)
+        {
+            this.discountType = discountType;
+        }
+
         public bool AddItem(string itemName,int itemQuantity)
         {
             if(cartItems.ContainsKey(itemName))
@@ -26,8 +31,6 @@ namespace Shopping.com
             int price = itemDetails.GetItemPriceByName(itemName);
             if(price!=-1)
             {
-                int discount = categoryDiscount.GetDiscount(itemDetails.product.category);
-                categoryWiseDiscount = categoryWiseDiscount + (price * itemQuantity* discount / 100);
                 cartValue = cartValue + (price* itemQuantity);
                 return true;
             }
@@ -39,11 +42,16 @@ namespace Shopping.com
         
         public bool RemoveItem(string itemName,int itemQuantity)
         {
+            if (cartItems.ContainsKey(itemName))
+            {
+                cartItems[itemName] -= itemQuantity;
+            }
+            else
+                return false;
+
             int price = itemDetails.GetItemPriceByName(itemName);
             if(price!=-1)
             {
-                int discount = categoryDiscount.GetDiscount(itemDetails.product.category);
-                categoryWiseDiscount = categoryWiseDiscount - (price * itemQuantity * discount / 100);
                 cartValue = cartValue - (price * itemQuantity);
                 return true;
             }
@@ -64,14 +72,11 @@ namespace Shopping.com
             return items;
         }
 
-        public int GetCartValue()
+        public double Checkout()
         {
-            int cartWiseDiscount = (cartValue * cartDiscount.GetDiscount(cartValue) / 100 );
-            if (cartWiseDiscount >= categoryWiseDiscount)
-                return cartValue - cartWiseDiscount;
-
-            else
-                return cartValue - categoryWiseDiscount;
+            IDiscount discount = DiscountType.GetDiscountType(discountType);
+            
+            return cartValue - discount.GetDiscount(cartItems); ;
         }
 
     }
